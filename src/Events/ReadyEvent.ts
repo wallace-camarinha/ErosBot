@@ -1,6 +1,6 @@
 import { Client } from 'discord.js';
-import { guildDeployCommands } from '../CommandsHandlers/guildDeployCommands';
-import { setCommands } from '../CommandsHandlers/setCommands';
+import { guildDeployCommands } from '../Handlers/CommandsHandlers/guildDeployCommands';
+import { setCommands } from '../Handlers/CommandsHandlers/setCommands';
 import { IEvents } from './IEvents';
 
 export class ReadyEvent implements IEvents {

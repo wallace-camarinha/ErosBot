@@ -1,20 +1,16 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { AudioPlayerStatus, createAudioPlayer } from '@discordjs/voice';
+import { AudioPlayerStatus } from '@discordjs/voice';
 import {
   CacheType,
   Command,
   CommandInteraction,
   GuildMember,
-  Queue,
   Song,
-  TextChannel,
 } from 'discord.js';
 
-import { ChannelHandler } from '../Utils/ChannelHandler/ChannelHandler';
-import { SongHandler } from '../Utils/SongHandler/SongHandler';
-
-const songHandler = new SongHandler();
+import { QueueHandler } from '../Handlers/QueueHandler/QueueHandler';
+import { SongHandler } from '../Handlers/SongHandler/SongHandler';
 
 export class PlayCommand implements Command {
   data: SlashCommandBuilder;
@@ -44,54 +40,35 @@ export class PlayCommand implements Command {
       return;
     }
 
-    const { queue } = interaction.client;
+    const songString = interaction.options.get('song')!.value as string;
+    const song = await SongHandler.getSong(songString);
 
-    const songInput = interaction.options.get('song')!.value as string;
-    const song = await songHandler.getSong(songInput);
+    const serverQueue = await QueueHandler.handleQueue(
+      interaction,
+      member,
+      song,
+      voiceChannel,
+    );
 
-    const serverQueue = interaction.client.queue.get(interaction.guildId);
-    if (!serverQueue) {
-      const queueConstruct: Queue = {
-        textChannel: interaction.channel as TextChannel,
-        voiceChannel,
-        audioPlayer: createAudioPlayer(),
-        connection: undefined,
-        songs: [],
-        volume: 5,
-        playing: true,
-      };
-
-      queue.set(interaction.guildId, queueConstruct);
-      queueConstruct.songs.push(song);
-
-      const joinResponse = ChannelHandler.joinVcChannel(member, voiceChannel);
-      try {
-        const connection = joinResponse.voiceConnection;
-        queueConstruct.connection = connection;
-        const songResponse = this.play(interaction, queueConstruct.songs[0]);
-
-        await interaction.reply({
-          embeds: [this.embedResponse(songResponse, member)],
-        });
-      } catch (err) {
-        console.log(err);
-        queue.delete(interaction.guildId);
-        await interaction.reply(`There was an error\n${err}`);
-        return;
-      }
-    } else {
-      serverQueue.songs.push(song);
-      await interaction.reply(`${song.title} has been added to the queue!`);
+    try {
+      const songResponse = this.play(interaction, serverQueue!.songs[0]);
+      await interaction.reply({
+        embeds: [this.embedResponse(songResponse, member)],
+      });
+    } catch (err) {
+      console.log(err);
+      QueueHandler.deleteQueue(interaction);
+      await interaction.reply(`There was an error\n${err}`);
+      return;
     }
   }
 
   public play(interaction: CommandInteraction, song: Song): Song {
-    const { queue } = interaction.client;
     const { guild } = interaction;
-    const serverQueue = queue.get(guild!.id);
+    const serverQueue = interaction.client.queue.get(guild!.id);
 
     if (!song) {
-      queue.delete(guild!.id);
+      QueueHandler.deleteQueue(interaction);
       return song;
     }
 
@@ -99,15 +76,14 @@ export class PlayCommand implements Command {
       serverQueue.audioPlayer,
     );
 
-    const resource = songHandler.createResource(song);
-
+    const resource = SongHandler.createResource(song);
     serverQueue!.subscription?.player.play(resource);
 
     // Refactor
     serverQueue?.audioPlayer.on(AudioPlayerStatus.Idle, () => {
-      const nextResource = songHandler.getNextResource(serverQueue);
+      const nextResource = SongHandler.getNextResource(serverQueue);
       if (!nextResource) {
-        queue.delete(interaction.guildId);
+        QueueHandler.deleteQueue(interaction);
         return;
       }
 

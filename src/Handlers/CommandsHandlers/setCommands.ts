@@ -1,4 +1,4 @@
-import { client } from '..';
+import { client } from '../..';
 import { commandsMap } from './CommandsMap';
 
 export function setCommands(): void {

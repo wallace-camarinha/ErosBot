@@ -1,6 +1,6 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { Command, CommandInteraction } from 'discord.js';
-import { SongHandler } from '../Utils/SongHandler/SongHandler';
+import { SongHandler } from '../Handlers/SongHandler/SongHandler';
 
 const songHandler = new SongHandler();
 

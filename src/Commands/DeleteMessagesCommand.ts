@@ -31,7 +31,6 @@ export class DeleteMessagesCommand implements Command {
     });
 
     const filteredMessages: Message[] = [];
-
     messages.forEach(message => {
       // 1209600000 = 14 days in milliseconds.
       if (message.createdTimestamp > Math.floor(Date.now() - 1209600000)) {

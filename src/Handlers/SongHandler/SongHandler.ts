@@ -9,14 +9,14 @@ import { Queue, Song } from 'discord.js';
 import ytdl from 'ytdl-core';
 import ytsr, { Video } from 'ytsr';
 
-import { ISongManager } from './interfaces/ISongManager';
-
-export class SongHandler implements ISongManager {
-  public async getSong(inputStr: string): Promise<Song> {
+export class SongHandler {
+  public static async getSong(inputStr: string): Promise<Song> {
     const result = await ytsr(inputStr, { limit: 1 });
     const video = result.items[0] as Video;
 
     const song: Song = {
+      /* Creating a member variable. */
+
       title: video.title,
       url: video.url,
       songInfo: video,
@@ -25,7 +25,7 @@ export class SongHandler implements ISongManager {
     return song;
   }
 
-  public createResource(song: Song): AudioResource {
+  public static createResource(song: Song): AudioResource {
     const resource = createAudioResource(
       ytdl(song.url, { filter: 'audioonly' }),
       {
@@ -36,7 +36,7 @@ export class SongHandler implements ISongManager {
     return resource;
   }
 
-  public getNextResource(
+  public static getNextResource(
     serverQueue: Queue | undefined,
   ): AudioResource | undefined {
     serverQueue?.songs.shift();

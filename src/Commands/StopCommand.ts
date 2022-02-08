@@ -27,8 +27,9 @@ export class StopCommand implements Command {
       return;
     }
 
-    serverQueue.songs = [];
     serverQueue.subscription?.player.stop();
+    serverQueue.connection?.disconnect();
+    interaction.client.queue.delete(interaction.guildId);
 
     await interaction.reply(`Stopped playing!`);
   }

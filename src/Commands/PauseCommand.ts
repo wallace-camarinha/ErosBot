@@ -13,7 +13,10 @@ export class PauseCommand implements Command {
   async execute(interaction: CommandInteraction<CacheType>): Promise<void> {
     const serverQueue = interaction.client.queue.get(interaction.guildId);
     if (!serverQueue) {
-      await interaction.reply("I'm not playing anything right now!");
+      await interaction.reply({
+        content: "I'm not playing anything right now!",
+        ephemeral: true,
+      });
     }
 
     const member = interaction.guild?.members.cache.get(
@@ -22,9 +25,10 @@ export class PauseCommand implements Command {
     if (!member) return;
 
     if (member?.voice.channel !== serverQueue?.voiceChannel) {
-      await interaction.reply(
-        'You must be in my voice channel to pause a song! <3',
-      );
+      await interaction.reply({
+        content: 'You must be in my voice channel to pause a song! <3',
+        ephemeral: true,
+      });
       return;
     }
 
