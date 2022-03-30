@@ -30,17 +30,17 @@ export class PlayCommand implements Command {
   public async execute(
     interaction: CommandInteraction<CacheType>,
   ): Promise<void> {
-    const member = interaction.guild?.members.cache.get(
-      interaction.member!.user.id,
-    );
+    const member = interaction.member as GuildMember;
     const voiceChannel = member?.voice.channel;
 
     if (!member || !voiceChannel) {
-      await interaction.reply('Can not run this command!');
+      await interaction.reply(
+        'You need to be in a voice channel to run this command!',
+      );
       return;
     }
 
-    const songString = interaction.options.get('song')!.value as string;
+    const songString = interaction.options.get('song')?.value as string;
     const song = await SongHandler.getSong(songString);
 
     const serverQueue = await QueueHandler.handleQueue(
@@ -53,7 +53,7 @@ export class PlayCommand implements Command {
     try {
       const songResponse = this.play(interaction, serverQueue!.songs[0]);
       await interaction.reply({
-        embeds: [this.embedResponse(songResponse, member)],
+        content: `Now playing ${songResponse.title}\n${member.user}`,
       });
     } catch (err) {
       console.log(err);
@@ -92,18 +92,5 @@ export class PlayCommand implements Command {
     });
 
     return song;
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public embedResponse(songResponse: Song, member: GuildMember): any {
-    const embed = {
-      color: '#372549',
-      title: `Now Playing ${songResponse.title}`,
-      url: songResponse.url,
-      thumbnail: songResponse.songInfo?.bestThumbnail,
-      description: `${member.user}`,
-    };
-
-    return embed;
   }
 }

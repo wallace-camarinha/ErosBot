@@ -1,5 +1,10 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { CacheType, Command, CommandInteraction } from 'discord.js';
+import {
+  CacheType,
+  Command,
+  CommandInteraction,
+  GuildMember,
+} from 'discord.js';
 
 export class ResumeCommand implements Command {
   data: SlashCommandBuilder;
@@ -19,10 +24,7 @@ export class ResumeCommand implements Command {
       });
     }
 
-    const member = interaction.guild?.members.cache.get(
-      interaction.member!.user.id,
-    );
-    if (!member) return;
+    const member = interaction.member as GuildMember;
     if (member?.voice.channel !== serverQueue?.voiceChannel) {
       await interaction.reply({
         content: 'You must be in my voice channel to resume a song! <3',

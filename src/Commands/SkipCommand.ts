@@ -1,8 +1,6 @@
 import { SlashCommandBuilder } from '@discordjs/builders';
-import { Command, CommandInteraction } from 'discord.js';
+import { Command, CommandInteraction, GuildMember } from 'discord.js';
 import { SongHandler } from '../Handlers/SongHandler/SongHandler';
-
-const songHandler = new SongHandler();
 
 export class SkipCommand implements Command {
   data: SlashCommandBuilder;
@@ -19,10 +17,8 @@ export class SkipCommand implements Command {
       await interaction.reply("I'm not playing anything right now!");
     }
 
-    const member = interaction.guild?.members.cache.get(
-      interaction.member!.user.id,
-    );
-    if (!member) return;
+    const member = interaction.member as GuildMember;
+
     if (member?.voice.channel !== serverQueue?.voiceChannel) {
       await interaction.reply(
         'You must be in my voice channel to skip a song! <3',
@@ -30,7 +26,7 @@ export class SkipCommand implements Command {
       return;
     }
 
-    const nextResource = songHandler.getNextResource(serverQueue);
+    const nextResource = SongHandler.getNextResource(serverQueue);
 
     if (!nextResource) {
       serverQueue.subscription?.player.stop();
